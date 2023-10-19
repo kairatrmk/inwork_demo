@@ -42,6 +42,11 @@ works_on_target_date = getattr(employee_schedule.working_days, target_day)
 
 # Now you can use the `works_on_target_date` variable to determine if the employee works on the target date or has a day off.
 if works_on_target_date:
+    # Получите время начала и окончания рабочего дня
+    start_time = employee_schedule.worktime_start
+    end_time = employee_schedule.worktime_end
+
     print(f"The employee works on {target_date}.")
+    print(f"Work hours: {start_time} to {end_time}")
 else:
     print(f"The employee has a day off on {target_date}.")

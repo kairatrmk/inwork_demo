@@ -44,6 +44,8 @@ class WorkingDay(models.Model):
     friday = models.BooleanField(default=True)
     saturday = models.BooleanField(default=False)
     sunday = models.BooleanField(default=False)
+    time_start = models.TimeField(default=time(9, 0))
+    time_end = models.TimeField(default=time(18, 0))
 
 
 # https://pypi.org/project/django-timezone-field/
