@@ -48,6 +48,12 @@ class WorkingDay(models.Model):
     time_end = models.TimeField(default=time(18, 0))
 
 
+class ScheduleParameters(models.Model):
+    name = models.CharField(max_length=255)
+    work_days = models.PositiveIntegerField()
+    off_days = models.PositiveIntegerField()
+
+
 # https://pypi.org/project/django-timezone-field/
 class EmployeeSchedule(models.Model):
     schedule_type = models.CharField(max_length=255, help_text='Тип расписаний')
@@ -58,6 +64,7 @@ class EmployeeSchedule(models.Model):
     timezone = TimeZoneField(default='UTC')
     schedule_repeat_type = models.CharField(max_length=255, help_text='Тип повтора расписания')
     working_days = models.ForeignKey(WorkingDay, on_delete=models.CASCADE)
+    schedule_parameters = models.ForeignKey(ScheduleParameters, on_delete=models.CASCADE, null=True)
     # todo: add break time logic
 
     def get_starting_day(self):
