@@ -1,39 +1,10 @@
-from django.contrib.auth.models import AbstractUser, BaseUserManager
-from django.utils.translation import gettext_lazy as _
 from django.db import models
 from timezone_field import TimeZoneField
 from datetime import time, timedelta
 
-
-class CustomUserManager(BaseUserManager):
-    def create_user(self, email, password=None, **extra_fields):
-        if not email:
-            raise ValueError(_('The Email field must be set'))
-        email = self.normalize_email(email)
-        user = self.model(email=email, **extra_fields)
-        user.set_password(password)
-        user.save(using=self._db)
-        return user
-
-    def create_superuser(self, email, password=None, **extra_fields):
-        extra_fields.setdefault('is_staff', True)
-        extra_fields.setdefault('is_superuser', True)
-
-        if extra_fields.get('is_staff') is not True:
-            raise ValueError(_('Superuser must have is_staff=True.'))
-        if extra_fields.get('is_superuser') is not True:
-            raise ValueError(_('Superuser must have is_superuser=True.'))
-
-        return self.create_user(email, password, **extra_fields)
-
-
-class User(AbstractUser):
-    email = models.EmailField(_("email address"), unique=True)
-
-    USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = []
-
-    objects = CustomUserManager()
+from companies.models import Branch, Department
+from employee.models import Position, Employee
+from .parametrs import ScheduleParameters
 
 
 class WorkingDay(models.Model):
@@ -48,23 +19,48 @@ class WorkingDay(models.Model):
     time_end = models.TimeField(default=time(18, 0))
 
 
-class ScheduleParameters(models.Model):
-    name = models.CharField(max_length=255)
-    work_days = models.PositiveIntegerField()
-    off_days = models.PositiveIntegerField()
+class ScheduleType(models.Model):
+    title = models.CharField(max_length=255)
+    description = models.TextField(max_length=255, null=True, blank=True)
+
+    def __str__(self):
+        return self.title
+
+
+class LeaveType(models.Model):
+    title = models.CharField(max_length=255)
+    description = models.TextField(max_length=255, null=True, blank=True)
+
+    def __str__(self):
+        return self.title
 
 
 # https://pypi.org/project/django-timezone-field/
 class EmployeeSchedule(models.Model):
-    schedule_type = models.CharField(max_length=255, help_text='Тип расписаний')
+    title = models.CharField(max_length=255)
+    type = models.ForeignKey(ScheduleType, on_delete=models.CASCADE, help_text='Тип расписания')
+    leave_type = models.ForeignKey(LeaveType, on_delete=models.CASCADE, help_text='Тип пропуска')
+    timezone = TimeZoneField(default='UTC')
+    time_start = models.TimeField(default=time(9, 0))
+    time_end = models.TimeField(default=time(18, 0))
+    break_time = models.PositiveIntegerField(default=1, help_text='Количество часов перерыва')
+    grace_start = models.TimeField(default=time(12, 0))
+    grace_end = models.TimeField(default=time(13, 0))
+    boundary_start = models.TimeField(default=time(9, 0), help_text='Вверхняя граница расписания')
+    boundary_end = models.TimeField(default=time(18, 0), help_text='Нижняя граница расписания')
+    time_planned = models.PositiveIntegerField(default=8, help_text='Количество рабочих часов для свободного графика')
+    location_id = models.ForeignKey(Branch, on_delete=models.CASCADE)
+    department_id = models.ForeignKey(Department, on_delete=models.CASCADE)
+    position_id = models.ForeignKey(Position, on_delete=models.CASCADE)
     period_from = models.DateField()
     period_to = models.DateField()
-    worktime_start = models.TimeField(default=time(9, 0))
-    worktime_end = models.TimeField(default=time(18, 0))
-    timezone = TimeZoneField(default='UTC')
-    schedule_repeat_type = models.CharField(max_length=255, help_text='Тип повтора расписания')
-    working_days = models.ForeignKey(WorkingDay, on_delete=models.CASCADE)
-    schedule_parameters = models.ForeignKey(ScheduleParameters, on_delete=models.CASCADE, null=True)
+    employees_id = models.ForeignKey(Employee, on_delete=models.CASCADE)
+    is_active = models.BooleanField(default=True)
+    working_days = models.ForeignKey(WorkingDay, on_delete=models.CASCADE, null=True, blank=True)
+    custom_time = models.JSONField(null=True, blank=True, default=None, help_text='Выбор индивидуального времени работы для рабочих дней ')
+    schedule_repeat_type = models.CharField(max_length=255, help_text='Тип повтора расписания', choices=(('individual', 'Разное время для каждого дня'), ('common', 'Единое время для выбранных дней')))
+    schedule_parameters = models.ForeignKey(ScheduleParameters, on_delete=models.CASCADE, null=True, blank=True)
+
     # todo: add break time logic
 
     def get_starting_day(self):
@@ -72,24 +68,5 @@ class EmployeeSchedule(models.Model):
         while not getattr(self.working_days, current_day.strftime('%A').lower()):
             current_day += timedelta(days=1)
         return current_day
-
-
-class Employee(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    position = models.CharField(max_length=128)
-    department = models.CharField(max_length=128)
-    branch = models.CharField(max_length=128)
-    employee_schedule = models.ForeignKey(EmployeeSchedule, on_delete=models.CASCADE)
-
-
-class Position(models.Model):
-    name = models.CharField(max_length=128)
-    description = models.TextField()
-    branch = models.CharField(max_length=128)
-    department = models.CharField(max_length=128)
-    working_days = models.ForeignKey(WorkingDay, on_delete=models.CASCADE)
-    employee_schedule = models.ForeignKey(EmployeeSchedule, on_delete=models.CASCADE)
-
-
 
 

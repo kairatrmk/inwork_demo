@@ -59,43 +59,33 @@ from schedules.models import Employee,  ScheduleParameters
 
 from datetime import date, timedelta
 
-
-from datetime import date, timedelta
-
-def is_workday_in_alternating_schedule(start_date, target_date, work_days, off_days):
-    # Первый рабочий день
-    is_workday = True
-
-    # Цикл по дням между start_date и target_date
+# выводит весь его рабочий график
+def is_workday_in_variable_schedule(start_date, target_date, work_days, off_days):
     current_date = start_date
-    while current_date < target_date:
-        if is_workday:
-            if work_days > 0:
-                work_days -= 1
-            else:
-                is_workday = False
-        else:
-            if off_days > 0:
-                off_days -= 1
-            else:
-                is_workday = True
+    is_workday = True
+    results = []
 
-        current_date += timedelta(days=1)
+    while current_date <= target_date:
+        for _ in range(work_days):
+            results.append(True)
+            current_date += timedelta(days=1)
 
-    return is_workday
+        for _ in range(off_days):
+            results.append(False)
+            current_date += timedelta(days=1)
 
-    # Пример использования
+    return results
+
+# Пример использования
 start_date = date(2023, 10, 1)  # Начало графика
-target_date = date(2023, 10, 7)  # Целевая дата
+target_date = date(2023, 11, 12)  # Целевая дата
 work_days = 1
-work_days = work_days - 1
-off_days = 2  # Изменили на 2 выходных дня
-off_days = off_days - 1
+off_days = 3
 
-result = is_workday_in_alternating_schedule(start_date, target_date, work_days, off_days)
+results = is_workday_in_variable_schedule(start_date, target_date, work_days, off_days)
 
-if result:
-    print(f"The employee works on {target_date}.")
-else:
-    print(f"The employee has a day off on {target_date}.")
-
+for day, result in enumerate(results, start=1):
+    if result:
+        print(f"Day {day}: True (The employee works)")
+    else:
+        print(f"Day {day}: False (The employee has a day off)")

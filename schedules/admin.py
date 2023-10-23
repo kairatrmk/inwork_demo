@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import User, EmployeeSchedule, Employee, WorkingDay
+from .models import User, EmployeeSchedule, Employee, WorkingDay, ScheduleParameters
 
 
 # Register your models here.
@@ -27,3 +27,9 @@ class EmployeeAdmin(admin.ModelAdmin):
 class WorkingDayAdmin(admin.ModelAdmin):
     list_display = ('id', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday')
     list_filter = ('monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday')
+
+
+@admin.register(ScheduleParameters)
+class ScheduleParametersAdmin(admin.ModelAdmin):
+    list_display = ('id', 'name', 'work_days', 'off_days')
+    search_fields = ('name',)
