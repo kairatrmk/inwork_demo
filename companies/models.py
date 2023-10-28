@@ -21,7 +21,7 @@ class Company(models.Model):
 
 class Branch(models.Model):
     title = models.CharField(max_length=128)
-    description = models.TextField(max_length=256,null=True,blank=True)
+    description = models.TextField(max_length=256, null=True, blank=True)
     address = models.CharField(max_length=128)
     lat = models.DecimalField(max_digits=10, decimal_places=6)
     lng = models.DecimalField(max_digits=10, decimal_places=6)

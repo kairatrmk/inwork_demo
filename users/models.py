@@ -32,8 +32,8 @@ class CustomUserManager(BaseUserManager):
 class User(AbstractUser):
     avatar = models.ImageField(upload_to='avatars', blank=True, null=True)
     email = models.EmailField(_("email address"), unique=True)
-    country = models.ForeignKey(Country, on_delete=models.CASCADE)
-    employee = models.ForeignKey(Employee, on_delete=models.CASCADE)
+    country = models.ForeignKey(Country, on_delete=models.CASCADE, null=True, blank=True)
+    employee = models.ForeignKey(Employee, on_delete=models.CASCADE, null=True, blank=True)
 
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = []
